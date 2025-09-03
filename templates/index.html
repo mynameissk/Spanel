@@ -676,11 +676,13 @@
 
         function next() {
             fetch('/next', {method: 'POST'})
+                .then(res => console.log('Next status:', res.status))
                 .catch(error => console.error('Sonraki şarkı hatası:', error));
         }
 
         function prev() {
             fetch('/previous', {method: 'POST'})
+                .then(res => console.log('Prev status:', res.status))
                 .catch(error => console.error('Önceki şarkı hatası:', error));
         }
 
