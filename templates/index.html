@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem ve Müzik Kontrol Paneli</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+    /* Amcık CSS kısmı style.css de yapabilirdim ama sikimde değil */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            font-size: 1.1em;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            margin: auto;
+            padding: 20px;
+        }
+        /* Cpu ram bilgisi */
+        .system-info {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            background: rgba(0, 255, 150, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .system-info div {
+            text-align: center;
+        }
+
+        .system-info span {
+            font-weight: bold;
+            color: #00ff96;
+        }
+        /* Amına kodumun kertenkelesi media tuşları buralar karışıktı chatgpt sağolsun daha da amına koydu deneye deneye düzelttim */
+        .media-control {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #nowplaying {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            min-height: 1.5em;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            max-width: 100%;
+        }
+
+
+
+        @keyframes scroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .buttons button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 255, 150, 0.2);
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .buttons button:hover {
+            background: rgba(0, 255, 150, 0.4);
+        }
+
+        .buttons button img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .volume {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 255, 150, 0.2);
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .volume button:hover {
+            background: rgba(0, 255, 150, 0.4);
+        }
+
+        .volume button img {
+            width: 30px;
+            height: 30px;
+        }
+
+        #volslider {
+            width: 60%;
+            margin: 0 10px;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        #volslider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ff96;
+            cursor: pointer;
+        }
+
+        .launchers {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .launchers button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            padding: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .launchers button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .launchers button img {
+            width: 70px;
+            height: 70px;
+        }
+/* Hakkında logosu ve içeriği */
+        #linux-info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        #linux-icon {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+        }
+
+        #info-box {
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            color: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-top: 10px;
+            width: 605px;
+            text-align: center;
+        }
+
+        #info-box .logos {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        #info-box .logos img {
+            width: 40px;
+            height: 40px;
+        }
+
+        #info-box .since {
+            margin-top: 10px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+/* Amına yarrağımı soktuğumun saati */
+        #clock {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            font-size: 1.2em;
+            background: rgba(0, 255, 150, 0.1);
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+
+        .music-icon {
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        button {
+            outline: none;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #00ff96;
+            box-shadow: 0 0 10px #00ff96;
+        }
+
+        .status-offline {
+            background: #ff4757;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            left: 20px;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .connected {
+            background: #00ff96;
+            box-shadow: 0 0 5px #00ff96;
+        }
+
+        .disconnected {
+            background: #ff4757;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sikik butonlar logolar ve serverdan çağırma -->
+    <div class="connection-status">
+        <span class="connection-dot disconnected" id="connection-dot"></span>
+        <span id="connection-text">Sunucuya bağlanılıyor...</span>
+    </div>
+
+    <div id="clock">22:33:04</div>
+
+    <div class="container">
+        <div class="system-info">
+            <div><span class="status-indicator status-online"></span>CPU: <span id="cpu">0</span>%</div>
+            <div><span class="status-indicator status-online"></span>RAM: <span id="ram">0</span>%</div>
+        </div>
+
+        <div class="media-control">
+            <div id="nowplaying">
+                <span class="music-icon">🎵</span>
+                <div class="nowplaying-container">
+                    <div class="nowplaying-scroll">Müzik bilgisi yükleniyor...</div>
+                </div>
+            </div>
+            <div class="buttons">
+                <button onclick="prev()"><img src="static/prev.png" alt="Önceki"></button>
+                <button onclick="playpause()"><img src="static/play.png" id="playicon" alt="Duraklat"></button>
+                <button onclick="next()"><img src="static/next.png" alt="Sonraki"></button>
+            </div>
+            <div class="volume">
+                <button onclick="mute()"><img src="static/mute.png" alt="Sessiz"></button>
+                <button onclick="changeVolume('down')"><img src="static/volume_down.png" alt="-"></button>
+                <input type="range" id="volslider" min="0" max="150" value="100" oninput="setVolume(this.value)">
+                <button onclick="changeVolume('up')"><img src="static/volume_up.png" alt="+"></button>
+            </div>
+        </div>
+
+        <div class="launchers">
+            <button onclick="launch('google')"><img src="static/google.png" alt="Google"></button>
+            <button onclick="launch('steam')"><img src="static/steam.png" alt="Steam"></button>
+            <button onclick="launch('discord')"><img src="static/discord.png" alt="Discord"></button>
+            <button onclick="launch('spotify')"><img src="static/spotify.png" alt="Spotify"></button>
+        </div>
+    </div>
+
+    <!-- Linux Info Button -->
+    <div id="linux-info">
+        <img src="static/linux.png" id="linux-icon" alt="Linux Logo" onclick="toggleInfo()">
+        <div id="info-box">
+            <div class="logos">
+                <img src="https://cdn-icons-png.flaticon.com/512/5968/5968350.png" alt="Python Logo">
+                <img src="https://cdn-icons-png.flaticon.com/512/5968/5968267.png" alt="HTML5 Logo">
+            </div>
+            <p style="font-size: 20px;">
+    Açık Kaynak Özgür Yazılım
+    <br>Bu sistem Sezer Tarafından
+    <br>Python ve HTML5 kütüphaneleri kullanılarak yazılmıştır.</br>
+            </p>
+<p class="since" style="font-size: 20px;">Since 2025</p>
+        </div>
+    </div>
+#Sunucu bağlantı bilgisi ve sikik io bağlantıları
+    <script>
+        // Socket.io bağlantısı
+        const socket = io();
+
+        // Bağlantı durumu güncelleme
+        socket.on('connect', () => {
+            console.log('Sunucuya bağlandı');
+            updateConnectionStatus(true, 'Sunucuya bağlandı');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Sunucu bağlantısı kesildi');
+            updateConnectionStatus(false, 'Sunucu bağlantısı kesildi');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Bağlantı hatası:', error);
+            updateConnectionStatus(false, 'Bağlantı hatası: ' + error.message);
+        });
+
+        // Sistem güncellemelerini dinle
+        socket.on('system_update', (data) => {
+            document.getElementById('cpu').innerText = data.cpu.toFixed(1);
+            document.getElementById('ram').innerText = data.ram.toFixed(1);
+        });
+
+        // Şarkı bilgisi güncellemelerini dinle
+        socket.on('now_playing', (data) => {
+            updateNowPlaying(data.title);
+        });
+
+        // Ses seviyesi güncellemelerini dinle
+        socket.on('volume_update', (data) => {
+            document.getElementById('volslider').value = data.volume;
+        });
+
+        function updateConnectionStatus(connected, message) {
+            const dot = document.getElementById('connection-dot');
+            const text = document.getElementById('connection-text');
+
+            if (connected) {
+                dot.className = 'connection-dot connected';
+            } else {
+                dot.className = 'connection-dot disconnected';
+            }
+
+            text.innerText = message;
+        }
+            // Şarkı kayma kısmı itinayla amına koyulduğu için düzelttim
+        function updateNowPlaying(title) {
+            const nowPlayingElement = document.getElementById('nowplaying');
+
+
+            const oldScroll = nowPlayingElement.querySelector('.nowplaying-container');
+            if (oldScroll) {
+                oldScroll.remove();
+            }
+
+
+            nowPlayingElement.innerHTML = `
+                <span class="music-icon">🎵</span>
+                <div class="nowplaying-container">
+                    <div class="nowplaying-scroll">${title}</div>
+                </div>
+            `;
+
+            // Kaydırma animasyonuydu ama çalışmıyo bende siktir ettim
+            const scrollElement = nowPlayingElement.querySelector('.nowplaying-scroll');
+            if (scrollElement.scrollWidth > nowPlayingElement.offsetWidth - 50) {
+                scrollElement.style.animation = 'scroll 15s linear infinite';
+            } else {
+                scrollElement.style.animation = 'none';
+                scrollElement.style.paddingLeft = '0';
+                scrollElement.style.transform = 'translateX(0)';
+            }
+        }
+
+        // Saat güncelleme kısmı
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Sayfa yüklendiğinde hemen çalıştır
+
+        // Ses kontrolü
+        function setVolume(val) {
+            fetch('/volume', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({level: val})
+            }).catch(error => {
+                console.error('Ses ayarlanırken hata:', error);
+            });
+        }
+
+        function changeVolume(action) {
+            let slider = document.getElementById('volslider');
+            let val = parseInt(slider.value);
+            if (action === 'up') {
+                val += 2;
+                if (val > 150) val = 150;
+            } else {
+                val -= 2;
+                if (val < 0) val = 0;
+            }
+            slider.value = val;
+            setVolume(val);
+        }
+
+        function mute() {
+            fetch('/mute', {method: 'POST'})
+                .catch(error => console.error('Sessiz ayarı yapılamadı:', error));
+        }
+
+        // Müzik kontrolü
+        function playpause() {
+            fetch('/playpause', {method: 'POST'})
+                .then(() => {
+                    const icon = document.getElementById('playicon');
+                    const imgSrc = icon.src;
+                    if (imgSrc.includes('727245.png')) {
+                        icon.src = 'https://cdn-icons-png.flaticon.com/512/727/727242.png';
+                    } else {
+                        icon.src = 'static/play.png';
+                    }
+                })
+                .catch(error => console.error('Oynat/Duraklat hatası:', error));
+        }
+
+        function next() {
+            fetch('/next', {method: 'POST'})
+                .catch(error => console.error('Sonraki şarkı hatası:', error));
+        }
+
+        function prev() {
+            fetch('/previous', {method: 'POST'})
+                .catch(error => console.error('Önceki şarkı hatası:', error));
+        }
+
+        // Uygulama başlatma
+        function launch(app) {
+            fetch('/launch', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({app: app})
+            }).catch(error => {
+                console.error('Uygulama başlatma hatası:', error);
+            });
+        }
+
+        // Linux info toggle
+        function toggleInfo() {
+            const box = document.getElementById('info-box');
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            // İlk değerleri göster
+            updateClock();
+        });
+    </script>
+</body>
+</html>
