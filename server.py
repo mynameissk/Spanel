@@ -97,7 +97,8 @@ def launch():
         "google": ["google-chrome-stable"],#Bunda sorun yaşarım dedim en kolay bu çalıştı amk
         "steam": ["/usr/bin/steam"], #Şu siktiğimin piçi root haklarıyla çalışmıyor
         "discord": ["flatpak", "run", "com.discordapp.Discord"],#Buda öyle
-        "spotify": ["spotify"]
+        "spotify": ["spotify"],
+        "youtube": ["youtube"]
     }
     if app_name in commands:
         subprocess.Popen(commands[app_name])
