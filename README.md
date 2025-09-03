@@ -2,7 +2,7 @@
 
 Flask + Flask-SocketIO tabanlı sistem ve medya kontrol paneli.
 
-![Spanel Görsel](images/im.jpg)
+![Spanel Görsel](images/im3.jpg)
 
 ## Kurulum
 
