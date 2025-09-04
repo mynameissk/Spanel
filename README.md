@@ -2,7 +2,7 @@
 
 Flask + Flask-SocketIO tabanlı sistem ve medya kontrol paneli. V.2.0
 
-![Spanel Görsel](images/im4.jpg)
+![Spanel Görsel](images/im5.jpg)
 
 ## Kurulum
 
@@ -32,7 +32,6 @@ Olarak --user parametresiyle çalıştırmak yine bu sorunu çözmeyecektir.
 Sürüm Notları:
 V1.0: -Ana sürüm
 
-V1.1: -İletişim hataları giderildi: SocketIO iyileştirmeleri
-      -Backend&Frontend App entegresi: Youtube,Spotify uygulamaları eklendi.
+V1.1: -İletişim hataları giderildi: SocketIO iyileştirmeleri, Backend&Frontend App entegresi: Youtube,Spotify uygulamaları eklendi.
 
-V2.0: UI Güncellemeleri ve Frontend İyileştirmeleri
+V2.0: UI Güncellemeleri ve Backend&Frontend İyileştirmeleri: Süre ve Progress bar eklendi, CSS düzenlemeleri yapıldı,
