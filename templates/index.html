@@ -22,11 +22,52 @@
             box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.9);
         }
 
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00ff96;
+            border-radius: 1px;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 150, 0.7);
+            pointer-events: none;
+        }
+
+        .progress-handle {
+            position: absolute;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            background: #00ff96;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(0, 255, 150, 0.9);
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+.progress-handle:hover {
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: 0 0 15px rgba(0, 255, 150, 1.2);
+}
+
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             width: 100%;
             margin: auto;
-            padding: 20px;
+            padding: 0px;
+            height: 600px;
             filter: drop-shadow(0 25px 35px rgba(0, 0, 0, 0.7));
         }
         /* Cpu ram bilgisi */
@@ -95,25 +136,68 @@
         .buttons {
             display: flex;
             justify-content: center;
-            gap: 15px;
             margin-bottom: 20px;
+            flex-wrap: nowrap;
         }
 
         .buttons button {
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(0, 255, 150, 0.2);
-            border: none;
             width: 80px;
             height: 80px;
             border-radius: 50%;
+            background: rgba(0, 255, 150, 0.2);
+            border: none;
             cursor: pointer;
-            transition: all 0.3s;
+            margin: 0 50px;
             box-shadow:
                 0 12px 25px rgba(0, 0, 0, 0.7),
                 0 4px 12px rgba(0, 255, 150, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tabletler için margin  */
+        @media (max-width: 1024px) {
+            .buttons button {
+                margin: 0 100px;
+            }
+        }
+
+        /* Telefonlar için margin  */
+        @media (max-width: 600px) {
+            .buttons button {
+                margin: 0 100px;
+            }
+        }
+
+
+
+        .song-time {
+            margin-left: 10px;
+            font-size: 0.8em;
+            opacity: 0.8;
+            color: #00ff96;
+            text-shadow: 0 0 10px rgba(0, 255, 150, 0.7);
+            white-space: nowrap;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #00ff96;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 150, 0.7);
         }
 
         .buttons button:hover {
@@ -134,16 +218,17 @@
         }
 
         .buttons button img {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.7));
         }
 
         .volume {
             display: flex;
-            justify-content: center;
+            justify-content: center; /* ortalar */
             align-items: center;
-            gap: 10px;
+            margin-bottom: 20px; /* opsiyonel alt boşluk */
+            flex-wrap: nowrap; /* alt satıra düşmesini istemiyorsak */
         }
 
         .volume button {
@@ -156,12 +241,28 @@
             height: 60px;
             border-radius: 50%;
             cursor: pointer;
+            margin: 0 20px; /* butonlar arasındaki boşluk */
             transition: all 0.3s;
             box-shadow:
                 0 10px 20px rgba(0, 0, 0, 0.6),
                 0 3px 10px rgba(0, 255, 150, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+
+
+        @media (max-width: 1024px) {
+            .volume button {
+                margin: 0 5px;
+            }
+        }
+
+
+        @media (max-width: 600px) {
+            .volume button {
+                margin: 0 3px;
+            }
+        }
+
 
         .volume button:hover {
             background: rgba(0, 255, 150, 0.4);
@@ -214,7 +315,7 @@
         .launchers {
             display: flex;
             justify-content: space-around;
-            margin-top: 20px;
+            margin-top: 40px;
         }
 
         .launchers button {
@@ -228,7 +329,7 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow:
-                0 15px 30px rgba(0, 0, 0, 0.7),
+                0 25px 20px rgba(0, 0, 0, 0.7),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
@@ -258,7 +359,7 @@
         .launchers button:hover img {
             filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.9));
         }
-/* Hakkında logosu ve içeriği */
+    /* Hakkında linux logosu ve içerik */
         #linux-info {
             position: fixed;
             bottom: 20px;
@@ -324,7 +425,7 @@
             opacity: 0.7;
             text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8);
         }
-/* Amına yarrağımı soktuğumun saati */
+        /* Amına yarrağımı soktuğumun saati */
         #clock {
             position: fixed;
             top: 10px;
@@ -459,7 +560,7 @@
             line-height: 1.6;
         }
 
-        /* Sayfa gölgesi */
+
         body::before {
             content: '';
             position: fixed;
@@ -472,7 +573,7 @@
             z-index: -1;
         }
 
-        /* Animasyonlar */
+
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -481,6 +582,16 @@
         .system-info:hover,
         .media-control:hover {
             animation: float 3s ease-in-out infinite;
+        }
+
+
+        .song-duration {
+            margin-left: 10px;
+            font-size: 0.8em;
+            opacity: 0.8;
+            color: #00ff96;
+            text-shadow: 0 0 10px rgba(0, 255, 150, 0.7);
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -505,19 +616,28 @@
                 <div class="nowplaying-container">
                     <div class="nowplaying-scroll">Müzik bilgisi yükleniyor...</div>
                 </div>
-            </div>
-            <div class="buttons">
-                <button onclick="prev()"><img src="static/prev.png" alt="Önceki"></button>
-                <button onclick="playpause()"><img src="static/play.png" id="playicon" alt="Duraklat"></button>
-                <button onclick="next()"><img src="static/next.png" alt="Sonraki"></button>
-            </div>
-            <div class="volume">
-                <button onclick="mute()"><img src="static/mute.png" alt="Sessiz"></button>
-                <button onclick="changeVolume('down')"><img src="static/volume_down.png" alt="-"></button>
-                <input type="range" id="volslider" min="0" max="150" value="100" oninput="setVolume(this.value)">
-                <button onclick="changeVolume('up')"><img src="static/volume_up.png" alt="+"></button>
-            </div>
+                <span class="song-time" id="songTime">00:00 / 00:00</span>
         </div>
+
+        <!-- Progress bar ekleyin -->
+       <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+            <div class="progress-handle" id="progressHandle"></div>
+        </div>
+
+
+        <div class="buttons">
+            <button onclick="prev()"><img src="static/prev.png" alt="Önceki"></button>
+            <button onclick="playpause()"><img src="static/play.png" id="playicon" alt="Duraklat"></button>
+            <button onclick="next()"><img src="static/next.png" alt="Sonraki"></button>
+        </div>
+        <div class="volume">
+            <button onclick="mute()"><img src="static/mute.png" alt="Sessiz"></button>
+            <button onclick="changeVolume('down')"><img src="static/volume_down.png" alt="-"></button>
+            <input type="range" id="volslider" min="0" max="150" value="100" oninput="setVolume(this.value)">
+            <button onclick="changeVolume('up')"><img src="static/volume_up.png" alt="+"></button>
+        </div>
+    </div>
 
         <div class="launchers">
             <button onclick="launch('google')"><img src="static/google.png" alt="Google"></button>
@@ -564,18 +684,19 @@
             updateConnectionStatus(false, 'Bağlantı hatası: ' + error.message);
         });
 
-        // Sistem güncellemelerini dinle
+        // Sistem güncellemeleri
         socket.on('system_update', (data) => {
             document.getElementById('cpu').innerText = data.cpu.toFixed(1);
             document.getElementById('ram').innerText = data.ram.toFixed(1);
         });
 
-        // Şarkı bilgisi güncellemelerini dinle
+        // Şarkı bilgisi güncellemeleri
         socket.on('now_playing', (data) => {
-            updateNowPlaying(data.title);
+        console.log('Şarkı bilgisi alındı:', data);
+            updateNowPlaying(data.title, data.position, data.duration, data.position_percent);
         });
 
-        // Ses seviyesi güncellemelerini dinle
+        // Ses seviyesi güncellemeleri
         socket.on('volume_update', (data) => {
             document.getElementById('volslider').value = data.volume;
         });
@@ -592,34 +713,61 @@
 
             text.innerText = message;
         }
-            // Şarkı kayma kısmı itinayla amına koyulduğu için düzelttim
-        function updateNowPlaying(title) {
+        // Senin gibi kodun anasnı sülalesini sikeyim orospu çocuğu çıldırdım amına koyarım he
+        function updateNowPlaying(title, position, duration, position_percent) {
             const nowPlayingElement = document.getElementById('nowplaying');
+            const timeElement = document.getElementById('songTime');
+            const progressBar = document.getElementById('progressBar');
+            const progressHandle = document.getElementById('progressHandle');
 
-
-            const oldScroll = nowPlayingElement.querySelector('.nowplaying-container');
-            if (oldScroll) {
-                oldScroll.remove();
-            }
-
-
-            nowPlayingElement.innerHTML = `
-                <span class="music-icon">🎵</span>
-                <div class="nowplaying-container">
-                    <div class="nowplaying-scroll">${title}</div>
-                </div>
-            `;
-
-            // Kaydırma animasyonuydu ama çalışmıyo bende siktir ettim
-            const scrollElement = nowPlayingElement.querySelector('.nowplaying-scroll');
-            if (scrollElement.scrollWidth > nowPlayingElement.offsetWidth - 50) {
-                scrollElement.style.animation = 'scroll 15s linear infinite';
+            // Eğer yeni şarkıysa sıfırla
+            if (position_percent === 0 || position === "00:00") {
+                if (progressBar && progressHandle) {
+                    progressBar.style.transition = 'none';
+                    progressHandle.style.transition = 'none';
+                    progressBar.style.width = '0%';
+                    progressHandle.style.left = '0%';
+                    // transition geri aç
+                    setTimeout(() => {
+                        progressBar.style.transition = '';
+                        progressHandle.style.transition = '';
+                    }, 50);
+                }
+                if (timeElement) {
+                    timeElement.innerText = `${position} / ${duration}`;
+                }
             } else {
-                scrollElement.style.animation = 'none';
-                scrollElement.style.paddingLeft = '0';
-                scrollElement.style.transform = 'translateX(0)';
+                if (progressBar && progressHandle) {
+                    progressBar.style.width = `${position_percent}%`;
+                    progressHandle.style.left = `${position_percent}%`;
+                }
+                if (timeElement) {
+                    timeElement.innerText = `${position} / ${duration}`;
+                }
             }
+
+    // Şarkı başlığı ve kaydırmayı sıfırla
+    const scrollElement = nowPlayingElement.querySelector('.nowplaying-scroll');
+    if (scrollElement) {
+        scrollElement.textContent = title;
+
+        // Kaydırma animasyon
+        scrollElement.style.animation = 'none';
+        scrollElement.style.transform = 'translateX(0)';
+        scrollElement.style.paddingLeft = '0';
+
+        if (scrollElement.scrollWidth > nowPlayingElement.offsetWidth - 50) {
+            // Animasyon yeniden başlat
+            setTimeout(() => {
+                scrollElement.style.animation = 'scroll 15s linear infinite';
+            }, 50);
         }
+    }
+}
+
+
+
+
 
         // Saat güncelleme kısmı
         function updateClock() {
@@ -674,6 +822,95 @@
                 .catch(error => console.error('Oynat/Duraklat hatası:', error));
         }
 
+        // Progress bar tıklama ve sürükleme
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressContainer = document.getElementById('progressContainer');
+            const progressHandle = document.getElementById('progressHandle');
+            let isDragging = false;
+
+            // Tıklama
+            progressContainer.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const clickPosition = (e.clientX - rect.left) / rect.width;
+                seekToPosition(clickPosition);
+            });
+
+            // Sürükleme
+            progressHandle.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) {
+                    const rect = progressContainer.getBoundingClientRect();
+                    let position = (e.clientX - rect.left) / rect.width;
+                    position = Math.max(0, Math.min(1, position));
+                    updateProgressPosition(position);
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    const rect = progressContainer.getBoundingClientRect();
+                    const handleRect = progressHandle.getBoundingClientRect();
+                    const position = (handleRect.left + handleRect.width / 2 - rect.left) / rect.width;
+                    seekToPosition(position);
+                }
+            });
+
+            progressHandle.addEventListener('touchstart', function(e) {
+                isDragging = true;
+                e.preventDefault();
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (isDragging) {
+                    const rect = progressContainer.getBoundingClientRect();
+                    let position = (e.touches[0].clientX - rect.left) / rect.width;
+                    position = Math.max(0, Math.min(1, position));
+                    updateProgressPosition(position);
+                }
+            });
+
+            document.addEventListener('touchend', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    const rect = progressContainer.getBoundingClientRect();
+                    const handleRect = progressHandle.getBoundingClientRect();
+                    const position = (handleRect.left + handleRect.width / 2 - rect.left) / rect.width;
+                    seekToPosition(position);
+                }
+            });
+
+
+            updateClock();
+        });
+
+
+        function updateProgressPosition(position) {
+            const progressBar = document.getElementById('progressBar');
+            const progressHandle = document.getElementById('progressHandle');
+
+            progressBar.style.width = `${position * 100}%`;
+            progressHandle.style.left = `${position * 100}%`;
+        }
+
+        function seekToPosition(position) {
+            position = Math.max(0, Math.min(1, position));
+
+            updateProgressPosition(position);
+
+            fetch('/seek', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({position: position})
+            }).catch(error => {
+                console.error('Şarkı konumu ayarlanırken hata:', error);
+            });
+        }
+
         function next() {
             fetch('/next', {method: 'POST'})
                 .then(res => console.log('Next status:', res.status))
@@ -711,3 +948,5 @@
     </script>
 </body>
 </html>
+
+
