@@ -6,7 +6,6 @@ import threading
 import time
 import logging
 
-# Siktiğimin login ayarı
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -14,38 +13,97 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
 
+previous_title = None
+current_position = 0.0
+current_duration = 0.0
+is_playing = False
+lock = threading.Lock()
+
+def format_time(seconds):
+    if not seconds or seconds == "N/A":
+        return "00:00"
+    try:
+        seconds = float(seconds)
+        minutes = int(seconds // 60)
+        seconds = int(seconds % 60)
+        return f"{minutes:02d}:{seconds:02d}"
+    except:
+        return "00:00"
+
 def system_stats_thread():
-    """Sistem durum kontrol amk"""
+    global previous_title, current_position, current_duration, is_playing
     while True:
         try:
-            # CPU kullanımı
+            # CPU ve RAM
             cpu = psutil.cpu_percent(interval=None)
-            # Ram kullanımı
             ram = psutil.virtual_memory().percent
-
-            logger.debug(f"CPU: {cpu}%, RAM: {ram}%")
-
-            # İstemcilere sistem güncellemesi gönderme
             socketio.emit("system_update", {"cpu": cpu, "ram": ram})
 
-            # Şu anda çalan müziği alma kısmı
             title = "Duraklatıldı"
-            try:
-                # Aktif playerları al
-                players = subprocess.check_output(["playerctl", "-l"], stderr=subprocess.DEVNULL).decode().splitlines()
-                if players:
-                    # İlk aktif player üzerinden şarkı başlığı alma
-                    title = subprocess.check_output(["playerctl", "-p", players[0], "metadata", "title"],
-                                                  stderr=subprocess.DEVNULL,
-                                                  timeout=2).decode().strip()
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
-                logger.debug(f"Playerctl hata: {e}")
+            duration = "00:00"
+            position_percent = 0
 
-            socketio.emit("now_playing", {"title": title})
+            with lock:
+                try:
+                    players = subprocess.check_output(["playerctl", "-l"], stderr=subprocess.DEVNULL).decode().splitlines()
+                    if players:
+                        # Çalma durumu
+                        status = subprocess.check_output(
+                            ["playerctl", "-p", players[0], "status"],
+                            stderr=subprocess.DEVNULL,
+                            timeout=2
+                        ).decode().strip()
+                        is_playing = status == "Playing"
 
-            # Bu sikiği koymazsam götünde yarrak varmış gibi oluyor okunmuyo bile
-            time.sleep(2)
+                        # Başlık
+                        title_raw = subprocess.check_output(
+                            ["playerctl", "-p", players[0], "metadata", "title"],
+                            stderr=subprocess.DEVNULL,
+                            timeout=2
+                        ).decode().strip()
+                        title = title_raw if title_raw else title
 
+                        # Süre
+                        dur_us = subprocess.check_output(
+                            ["playerctl", "-p", players[0], "metadata", "mpris:length"],
+                            stderr=subprocess.DEVNULL,
+                            timeout=2
+                        ).decode().strip()
+                        if dur_us.isdigit():
+                            current_duration = int(dur_us) / 1_000_000
+                            duration = format_time(current_duration)
+                        else:
+                            current_duration = 0
+
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+                    logger.debug(f"Playerctl hata: {e}")
+                    is_playing = False
+                    current_position = 0
+                    current_duration = 0
+                    previous_title = None
+
+                # Şarkı pozisyon sıfırla
+                if title != previous_title:
+                    current_position = 0.0
+                    previous_title = title
+
+                # Pozisyon kaydır
+                if is_playing and current_duration > 0:
+                    current_position += 1
+                    if current_position >= current_duration:
+                        current_position = 0.0
+                position = format_time(current_position)
+                position_percent = min(100, max(0, (current_position / current_duration) * 100)) if current_duration > 0 else 0
+
+            socketio.emit("now_playing", {
+                "title": title,
+                "position": position,
+                "duration": duration,
+                "position_percent": position_percent,
+                "is_playing": is_playing
+            })
+
+            time.sleep(1)
         except Exception as e:
             logger.error(f"Sistem istatistikleri alınırken hata: {str(e)}")
             time.sleep(5)
@@ -54,11 +112,10 @@ def system_stats_thread():
 try:
     stats_thread = threading.Thread(target=system_stats_thread, daemon=True)
     stats_thread.start()
-    logger.info("Sistem izleme thread'i başlatıldı")
 except Exception as e:
     logger.error(f"Thread başlatılamadı: {str(e)}")
 
-#Bu kısımın amk
+# Flask
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -82,21 +139,43 @@ def playpause():
 
 @app.route("/next", methods=["POST"])
 def next_track():
+    global previous_title, current_position
+    previous_title = None
+    current_position = 0
     subprocess.run(["playerctl", "next"])
     return jsonify({"status": "ok"})
 
 @app.route("/previous", methods=["POST"])
 def previous_track():
+    global previous_title, current_position
+    previous_title = None
+    current_position = 0
     subprocess.run(["playerctl", "previous"])
     return jsonify({"status": "ok"})
+
+@app.route("/seek", methods=["POST"])
+def seek():
+    pos = request.json.get("position", 0)
+    try:
+        players = subprocess.check_output(["playerctl", "-l"], stderr=subprocess.DEVNULL).decode().splitlines()
+        if players and current_duration > 0:
+            target = current_duration * float(pos)
+            subprocess.run(["playerctl", "-p", players[0], "position", str(target)])
+            with lock:
+                global current_position
+                current_position = target
+        return jsonify({"status": "ok", "position": pos})
+    except Exception as e:
+        logger.error(f"Seek hatası: {str(e)}")
+        return jsonify({"status": "error", "msg": str(e)}), 400
 
 @app.route("/launch", methods=["POST"])
 def launch():
     app_name = request.json.get("app")
     commands = {
-        "google": ["google-chrome-stable"],#Bunda sorun yaşarım dedim en kolay bu çalıştı amk
-        "steam": ["/usr/bin/steam"], #Şu siktiğimin piçi root haklarıyla çalışmıyor
-        "discord": ["flatpak", "run", "com.discordapp.Discord"],#Buda öyle
+        "google": ["google-chrome-stable"],
+        "steam": ["/usr/bin/steam"],
+        "discord": ["flatpak", "run", "com.discordapp.Discord"],
         "spotify": ["spotify"],
         "youtube": ["youtube"]
     }
@@ -107,5 +186,3 @@ def launch():
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5001, debug=True, allow_unsafe_werkzeug=True)
-
-
